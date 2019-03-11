@@ -21,7 +21,6 @@ class RequestUnityCommand(
         val requestee = args.getOne<Player>(Unity.PLAYER_ARG).get()
 
         val config = configAccessor.get()
-        requireSingle(player, requestee, config.unities)
 
         if (requestee.uniqueId == player.uniqueId) throw CommandException("Choose another player!".toText())
 

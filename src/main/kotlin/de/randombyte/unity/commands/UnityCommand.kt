@@ -15,10 +15,10 @@ abstract class UnityCommand(
     override fun executedByPlayer(player: Player, args: CommandContext): CommandResult {
         val config = configAccessor.get()
         val unities = config.unities
-        val unity = unities.getUnity(player.uniqueId)
-                ?: throw CommandException("You must be married to someone to execute this command!".toText())
-        return executedByUnityMember(player, args, unity, config)
+        val unityList = unities.getUnities(player.uniqueId)
+        if(unityList.isEmpty()) throw CommandException("You must be married to execute this command!".toText())
+        return executedByUnityMember(player, args, unityList, config)
     }
 
-    abstract fun executedByUnityMember(player: Player, args: CommandContext, thisUnity: Config.Unity, config: Config): CommandResult
+    abstract fun executedByUnityMember(player: Player, args: CommandContext, unityList: List<Config.Unity>, config: Config): CommandResult
 }

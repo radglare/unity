@@ -14,15 +14,20 @@ fun Player.checkRequester(requestee: Player, requests: Map<UUID, List<UUID>>): B
     return this.uniqueId in requestsToPlayer
 }
 
-fun requireSingle(commandSource: Player, otherPlayer: Player, unities: List<Config.Unity>) {
-    with(unities) {
-        if (!isSingle(commandSource.uniqueId)) throw CommandException("You must be single to execute this command!".toText())
-        if (!isSingle(otherPlayer.uniqueId)) throw CommandException("'${otherPlayer.name}' must be single to execute this command!".toText())
+fun List<Config.Unity>.getUnities(playerUuid: UUID): List<Config.Unity>{
+    val returned = mutableListOf<Config.Unity>()
+    for(unity in this.listIterator()){
+        if(unity.member1 == playerUuid || unity.member2 == playerUuid) returned.add(unity)
     }
+    return returned.toList()
 }
 
-fun List<Config.Unity>.getUnity(playerUuid: UUID) = firstOrNull { (member1, member2) -> member1 == playerUuid || member2 == playerUuid }
-fun List<Config.Unity>.isSingle(playerUuid: UUID) = getUnity(playerUuid) == null
+fun List<Config.Unity>.findUnity(playerUuid: UUID, targetUuid: UUID): Config.Unity? {
+    for(unity in this.getUnities(playerUuid).listIterator()){
+        if(unity.getOtherMember(playerUuid).equals(targetUuid)) return unity
+    }
+    return null
+}
 
 fun broadcastIfNotEmpty(text: Text) {
     if (!text.isEmpty) Sponge.getServer().broadcastChannel.send(text)

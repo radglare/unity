@@ -24,7 +24,6 @@ class AcceptRequestCommand(
         }
 
         val config = configAccessor.get()
-        requireSingle(player, requester, config.unities)
 
         removeRequest(requester.uniqueId, player.uniqueId)
         val newConfig = config.copy(unities = config.unities + Config.Unity(

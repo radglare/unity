@@ -20,6 +20,7 @@ import org.bstats.sponge.Metrics2
 import org.slf4j.Logger
 import org.spongepowered.api.Sponge
 import org.spongepowered.api.command.args.GenericArguments.player
+import org.spongepowered.api.command.args.GenericArguments.user
 import org.spongepowered.api.command.spec.CommandSpec
 import org.spongepowered.api.config.DefaultConfig
 import org.spongepowered.api.data.key.Keys
@@ -38,6 +39,7 @@ import org.spongepowered.api.event.service.ChangeServiceProviderEvent
 import org.spongepowered.api.plugin.Dependency
 import org.spongepowered.api.plugin.Plugin
 import org.spongepowered.api.plugin.PluginContainer
+import org.spongepowered.api.text.Text
 import org.spongepowered.api.text.action.TextActions
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,6 +67,7 @@ class Unity @Inject constructor(
         const val PLAYER_PERMISSION = "$ROOT_PERMISSION.player"
 
         const val PLAYER_ARG = "player"
+        const val USER_ARG = "user"
 
         val dateOutputFormat = SimpleDateFormat("dd.MM.yyyy")
     }
@@ -127,15 +130,17 @@ class Unity @Inject constructor(
         (event.newProvider as NucleusMessageTokenService).register(pluginContainer,
                 NucleusMessageTokenService.TokenParser { tokenInput, source, _ ->
                     if (tokenInput != "marry" || source !is Player) return@TokenParser Optional.empty()
-
                     val config = configManager.get()
-                    val unity = config.unities.getUnity(source.uniqueId) ?: return@TokenParser Optional.empty()
+                    val hoverText = Text.builder()
+                    val unities = config.unities.getUnities(source.uniqueId)
+                    if(unities.isEmpty()) return@TokenParser Optional.empty()
+                    for(unity in unities.listIterator()){
+                        val otherMemberName = unity.getOtherMember(source.uniqueId).getUser()?.name ?: "Unknown"
+                        SimpleDateTypeSerializer
+                        hoverText.append("Married to ".toText() + otherMemberName.gold() + ", " + dateOutputFormat.format(unity.date) + Text.NEW_LINE)
+                    }
 
-                    val otherMemberName = unity.getOtherMember(source.uniqueId).getUser()?.name ?: "Unknown"
-                    SimpleDateTypeSerializer
-                    val hoverText = "Married to ".toText() + otherMemberName.gold() + ", " + dateOutputFormat.format(unity.date)
-
-                    return@TokenParser config.marriedPrefix.action(TextActions.showText(hoverText)).toOptional()
+                    return@TokenParser config.marriedPrefix.action(TextActions.showText(hoverText.build())).toOptional()
         })
     }
 
@@ -143,8 +148,7 @@ class Unity @Inject constructor(
     fun onKissPartner(event: InteractEntityEvent.Secondary.MainHand, @Root player: Player, @Getter("getTargetEntity") partner: Player) {
         if (!config.kissingEnabled || !player.get(Keys.IS_SNEAKING).orElse(false)) return
         with (config.unities) {
-            val unity = getUnity(player.uniqueId) ?: return
-            if (unity.getOtherMember(player.uniqueId) != partner.uniqueId) return
+            if(findUnity(player.uniqueId, partner.uniqueId) == null) return
             partner.world.spawnParticles(kissingParticleEffect.value, partner.getProperty(EyeLocationProperty::class.java).get().value)
         }
     }
@@ -193,21 +197,26 @@ class Unity @Inject constructor(
                         .build(), "list")
                 .child(CommandSpec.builder()
                         .permission(PLAYER_PERMISSION)
+                        .arguments(user(USER_ARG.toText()))
                         .executor(DivorceCommand(configAccessor))
                         .build(), "divorce")
                 .child(CommandSpec.builder()
                         .permission(PLAYER_PERMISSION)
+                        .arguments(player(PLAYER_ARG.toText()))
                         .executor(TeleportCommand(configAccessor))
                         .build(), "teleport", "tp")
                 .child(CommandSpec.builder()
                         .permission(PLAYER_PERMISSION)
+                        .arguments(player(PLAYER_ARG.toText()))
                         .executor(GiftCommand(configAccessor))
                         .build(), "gift")
                 .child(CommandSpec.builder()
                         .permission(PLAYER_PERMISSION)
+                        .arguments(user(USER_ARG.toText()))
                         .executor(HomeCommand(configAccessor))
                         .child(CommandSpec.builder()
                                 .permission(PLAYER_PERMISSION)
+                                .arguments(user(USER_ARG.toText()))
                                 .executor(SetHomeCommand(configAccessor))
                                 .build(), "set")
                         .build(), "home")

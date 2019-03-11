@@ -116,11 +116,11 @@ data class Config(
                     "- /marry accept - Accept the proposal".toText(),
                     "- /marry decline - Decline the proposal".toText(),
                     "- /marry list - List all couples".toText(),
-                    "- /marry divorce - Divorce from your partner".toText(),
-                    "- /marry tp - Teleport to your partner".toText(),
-                    "- /marry gift - Gift the item you are holding to your partner".toText(),
-                    "- /marry home - Teleport to the couple's home".toText(),
-                    "- /marry home set - Set the couple's home".toText()
+                    "- /marry divorce <name> - Divorce a partner".toText(),
+                    "- /marry tp <name> - Teleport to a partner".toText(),
+                    "- /marry gift <name> - Gift the item you are holding to a partner".toText(),
+                    "- /marry home <name> - Teleport to couple's home".toText(),
+                    "- /marry home set <name> - Set couple's home".toText()
             )
     )
 }
